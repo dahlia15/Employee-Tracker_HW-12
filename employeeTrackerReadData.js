@@ -25,6 +25,8 @@ function start () {
             break;
         case 'View Employyes By Dept': viewEmployeesDept();
             break;
+        case 'View Employyes By Dept': viewEmployeesManager();
+            break;
         case 'Add Employee': addEmployee();
             break;
         case 'Update Employee': updateEmployee();
@@ -53,6 +55,53 @@ function viewAllEmployees() {
 function viewEmployeesDept() {
 
     connection.query("SELECT * FROM employeetracker_db GROUP BY dept_name", function(err, res) {
+        if (err) throw err;
+        console.log(res);
+        start();
+    });
+};
+
+function viewEmployeesDept() {
+
+    inquirer.prompt([
+        {type: "list",
+        name: "departments", 
+        message: "What department do you want to view?",
+        choices: ["Engineering", "Sales", "Finance", "Legal"]}
+    ]).then(function(answers) {
+
+        connection.query("SELECT * FROM employeetracker_db GROUP BY ?", {dept_name = answers.choices}, function(err, res) {
+            if (err) throw err;
+            console.log(res);
+            start();
+        });
+
+    })
+
+};
+
+function viewEmployeesDept() {
+
+    inquirer.prompt([
+        {type: "list",
+        name: "departments", 
+        message: "What department do you want to view?",
+        choices: ["Engineering", "Sales", "Finance", "Legal"]}
+    ]).then(function(answers) {
+
+        connection.query("SELECT * FROM employeetracker_db WHERE ?", {dept_name = answers.choices}, function(err, res) {
+            if (err) throw err;
+            console.log(res);
+            start();
+        });
+
+    })
+
+};
+
+function viewEmployeesManager() {
+
+    connection.query("SELECT * FROM employeetracker_db GROUP BY employee.manager", function(err, res) {
         if (err) throw err;
         console.log(res);
         start();
