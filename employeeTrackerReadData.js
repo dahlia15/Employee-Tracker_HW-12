@@ -19,7 +19,7 @@ function start () {
         name: "init",
         type: "list",
         message: "What Would You Like To Do?",
-        choices: ['View All Employees', 'View Employees By Dept','View Employees By Manager', 'View Employees By Role', 'Add Employee', 'Update Employee Role', 'Delete Employee', 'Exit']
+        choices: ['View All Employees', 'View Employees By Dept','View Employees By Manager', 'View Employees By Role', 'Add Employee', 'Add Role', 'Add Dept', 'Update Employee Role', 'Delete Employee', 'Exit']
     }]).then(function(answers) {
         //switch case
         switch(answers.init) {
@@ -32,6 +32,10 @@ function start () {
         case 'View Employees By Role': viewEmployeesRole();
             break;
         case 'Add Employee': addEmployee();
+            break;
+        case 'Add Role': addRole();
+            break;
+        case 'Add Dept': addDept();
             break;
         case 'Update Employee Role': updateEmployeeRole();
             break;
@@ -133,36 +137,6 @@ async function viewEmployeesManager() {
 
 };
 
-function viewEmployeesManager() {
-
-    var managerName = connection.query("SELECT * FROM employee LEFT JOIN role ON employee.role_id = role.id WHERE role.title='Manager';");
-    var showAll = managerName.map(function(employee) {
-        return employee.first_name + " " + employee.last_name
-    });
-
-    inquirer.prompt([
-        {
-            type: "list",
-            name: "pickManager",
-            choices: showAll
-        }
-    ]).then(function(answers) {
-
-        var firstName = answers.pickManager.split(" ")[0];
-        var lastName = answers.pickManager.split(" ")[1];
-
-        connection.query(
-            "SELECT * FROM employee LEFT JOIN role ON employee.role_id = role.id WHERE employee.first_name=? WHERE employee.last_name=?", {first_name: firstName}, {last_name: lastName}, 
-
-            function(err, res) {
-            if (err) throw err;
-            console.table(res);
-            start();
-        })
-
-    })
-
-};
 
 async function addEmployee() {
 
@@ -214,6 +188,68 @@ async function addEmployee() {
         if (err) throw err;
         console.log("Successfully Added Employee: " + res.first_name + " " + res.last_name)
 
+    });
+    start();
+});
+};
+
+async function addRole() {
+
+    var allDepts = await connection.query("SELECT * FROM department;");
+    var showDepts = allDepts.map(function(department){
+        return department.id + ". " + department.name;
+    });
+
+    inquirer.prompt([
+    {
+        type: "input",
+            name: "title",
+            message: "What role would you like to add?"
+        },
+        {
+            type: "input",
+            name: "salary",
+            message: "What is the salary? (No $ or , please!)",
+            //validate
+            default: 10000
+        },
+    {
+        type: "list",
+        name: "department",
+        message: "what department is this role under?",
+        choices: showDepts
+    }
+]).then(function(answers) {
+
+        var deptId = answers.department.split(".")[0];
+
+    connection.query("INSERT INTO role SET ?", {
+        title: answers.title,
+        salary: answers.salary,
+        department_id: deptId
+    },function (err, res) {
+        if (err) throw err;
+        console.log("Successfully Added Role!" )
+    });
+    start();
+});
+};
+
+async function addDept() {
+
+    await inquirer.prompt([
+    {
+            type: "input",
+            name: "dept_name",
+            message: "What is the name of the *new* department?"
+        },
+]).then(function(answers) {
+
+    connection.query("INSERT INTO department SET ?", {
+        name: answers.dept_name,
+    },function (err, res) {
+        if (err) throw err;
+        console.log("Successfully Added Dept!" )
     });
     start();
 });
@@ -276,7 +312,10 @@ async function deleteEmployee() {
         });
 };
 
-
+function exit() {
+    console.log("Bye!")
+    connection.end();
+};
 
 connection.connect(function(err) {
     if (err) 
