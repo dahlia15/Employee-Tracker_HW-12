@@ -17,7 +17,7 @@ function start () {
         name: "init",
         type: "list",
         message: "What Would You Like To Do?",
-        choices: ['View All Employees', 'View Employees By Dept','View Employees By Manager', 'Add Employee', 'Update Employee', 'Remove Employee']
+        choices: ['View All Employees', 'View Employees By Dept','View Employees By Manager', 'Add Employee', 'Update Employee', 'Delete Employee', 'Exit']
     }]).then(function(answers) {
         //switch case
         switch(answers.init) {
@@ -32,6 +32,8 @@ function start () {
         case 'Update Employee': updateEmployee();
             break;
         case 'Delete Employee': deleteEmployee();
+            break;
+        case 'Exit': exit();
             break;
 
         default: console.log("default");
@@ -67,7 +69,7 @@ function viewEmployeesDept() {
         {type: "list",
         name: "departments", 
         message: "What department do you want to view?",
-        choices: ["Engineering", "Sales", "Finance", "Legal"]}
+        choices: ['Engineering', 'Sales', 'Finance', 'Legal']}
     ]).then(function(answers) {
 
         connection.query("SELECT * FROM employeetracker_db GROUP BY ?", {dept_name = answers.choices}, function(err, res) {
@@ -86,7 +88,7 @@ function viewEmployeesDept() {
         {type: "list",
         name: "departments", 
         message: "What department do you want to view?",
-        choices: ["Engineering", "Sales", "Finance", "Legal"]}
+        choices: ['Engineering', 'Sales', 'Finance', 'Legal']}
     ]).then(function(answers) {
 
         connection.query("SELECT * FROM employeetracker_db WHERE ?", {dept_name = answers.choices}, function(err, res) {
@@ -101,11 +103,30 @@ function viewEmployeesDept() {
 
 function viewEmployeesManager() {
 
-    connection.query("SELECT * FROM employeetracker_db GROUP BY employee.manager", function(err, res) {
-        if (err) throw err;
-        console.log(res);
-        start();
+    var managerName = connection.query("SELECT * FROM employee LEFT JOIN role ON employee.role_id = role.id WHERE role.title='Manager';");
+    var showAll = managerName.map(function(employee) {
+        return employee.first_name + " " + employee.last_name
     });
+
+    inquirer.prompt([
+        {
+            type: "list",
+            name: "pickManager",
+            choices: showAll
+        }
+    ]).then(function(answers) {
+
+        var firstName = answers.pickManager.split(" ")[0];
+        var lastName = answers.pickManager.split(" ")[1];
+
+        connection.query("SELECT employee.first_name, employee.last_name WHERE role.title=? CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;", {first_name: firstName}, {last_name: lastName}, function(err, res) {
+            if (err) throw err;
+            console.table(res);
+            start();
+        })
+
+    })
+
 };
 
 async function addEmployee() {
@@ -195,7 +216,7 @@ function updateEmployee() {
     }) 
     ,function(err, res) {   
         if (err) throw err;
-        console.log("Successfully Updated!");
+        console.log("Successfully Updated " + res.X);
     };
     start();
 };
@@ -216,9 +237,12 @@ async function deleteEmployee() {
         }
     ]).then(function (answers) {
 
+        var firstName = answers.employeeList.split(" , ")[0];
+        var lastName = answers.employeeList.split(" , ")[1];
+
         connection.query("DELETE FROM employee WHERE name=?", {
-            first_name: answers.choices.first_name,
-            last_name: answers.choices.last_name,
+            first_name: firstName,
+            last_name: lastName
         }),
 
         function (err, res) {
@@ -226,7 +250,7 @@ async function deleteEmployee() {
             console.log("Successfully Deleted Employee from DB");
         };
         });
-    connection.end();
+    start();
 };
 
 

@@ -33,4 +33,4 @@ INSERT INTO role (title, salary, department_id)
 VALUES ("Sales Lead", "90000"), ("Salesperson", "75000"),("Lead Engineer", "180000"), ("Engineer", "100000"), ("Lawyer", "160000"), ("Accountant", "160000");
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Dahlia", "Amade"), ("Sales"), ("Finance"), ("Legal");
+VALUES ("Dahlia", "Amade"), ("Allison", "Buck"), ("Leah", "Stan"), ("Morgan", "Franklin");
