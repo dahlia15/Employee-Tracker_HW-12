@@ -119,7 +119,10 @@ function viewEmployeesManager() {
         var firstName = answers.pickManager.split(" ")[0];
         var lastName = answers.pickManager.split(" ")[1];
 
-        connection.query("SELECT employee.first_name, employee.last_name WHERE role.title=? CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON employee.manager_id = manager.id;", {first_name: firstName}, {last_name: lastName}, function(err, res) {
+        connection.query(
+            "SELECT * FROM employee LEFT JOIN role ON employee.role_id = role.id WHERE employee.first_name=? WHERE employee.last_name=?", {first_name: firstName}, {last_name: lastName}, 
+
+            function(err, res) {
             if (err) throw err;
             console.table(res);
             start();
